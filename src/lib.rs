@@ -17,6 +17,54 @@ use core::{
     str::FromStr,
 };
 
+// len_utf8 is copied from the private implementation in libcore:
+//
+// Copyright (c) 2014 The Rust Project Developers
+//
+// Permission is hereby granted, free of charge, to any
+// person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the
+// Software without restriction, including without
+// limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software
+// is furnished to do so, subject to the following
+// conditions:
+//
+// The above copyright notice and this permission notice
+// shall be included in all copies or substantial portions
+// of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+// ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+// PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+// SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+pub const MAX_ONE_B: u32 = 0x80;
+pub const MAX_TWO_B: u32 = 0x800;
+pub const MAX_THREE_B: u32 = 0x10000;
+
+/// Returns the number of bytes this `char` would need if encoded in UTF-8.
+///
+/// That number of bytes is always between 1 and 4, inclusive.
+#[inline]
+pub const fn len_utf8(code: u32) -> usize {
+    if code < MAX_ONE_B {
+        1
+    } else if code < MAX_TWO_B {
+        2
+    } else if code < MAX_THREE_B {
+        3
+    } else {
+        4
+    }
+}
+
 /// A `SmolStr` is a string type that has the following properties:
 ///
 /// * `size_of::<SmolStr>() == 24 (therefor == size_of::<String>() on 64 bit platforms)
@@ -122,7 +170,7 @@ impl SmolStr {
         let mut len = 0;
         let mut buf = [0u8; INLINE_CAP];
         while let Some(ch) = iter.next() {
-            let size = ch.len_utf8();
+            let size = len_utf8(ch as u32);
             if size + len > INLINE_CAP {
                 let (min_remaining, _) = iter.size_hint();
                 let mut heap = String::with_capacity(size + len + min_remaining);
