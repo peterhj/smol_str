@@ -370,7 +370,7 @@ impl From<&String> for SmolStr {
 
 impl From<String> for SmolStr {
     #[inline(always)]
-    fn from(text: String) -> Self {
+    fn from(text: String) -> SmolStr {
         Self::new(text)
     }
 }
@@ -385,6 +385,13 @@ impl From<Box<str>> for SmolStr {
 impl<'a> From<Cow<'a, str>> for SmolStr {
     #[inline]
     fn from(s: Cow<'a, str>) -> SmolStr {
+        SmolStr::new(s)
+    }
+}
+
+impl From<&SmolStr> for SmolStr {
+    #[inline]
+    fn from(s: &SmolStr) -> SmolStr {
         SmolStr::new(s)
     }
 }
